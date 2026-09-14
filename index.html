@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Карта воздушных тревог</title>
+
+    <meta name="theme-color" content="#0b0b1a">
+    <meta name="description" content="Онлайн-карта воздушных целей и тревог в Украине">
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Тревоги UA">
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
@@ -38,15 +49,6 @@
                 <label class="filter-item"><input type="checkbox" data-cat="aircraft" checked><span class="dot" style="background:#ff2222"></span><span>Авиация</span></label>
                 <label class="filter-item"><input type="checkbox" data-cat="recon" checked><span class="dot" style="background:#00ccff"></span><span>Разведка</span></label>
                 <label class="filter-item"><input type="checkbox" data-cat="other" checked><span class="dot" style="background:#ff4444"></span><span>Прочее</span></label>
-            </div>
-
-            <!-- ЛЕНТА TELEGRAM -->
-            <div id="tg-feed">
-                <div id="tg-feed-header">
-                    <span>📡 @eRadarrua</span>
-                    <span id="tg-status" title="Статус">●</span>
-                </div>
-                <div id="tg-feed-list"></div>
             </div>
 
             <div id="targets-list"></div>

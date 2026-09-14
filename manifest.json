@@ -1,0 +1,20 @@
+{
+  "name": "Карта воздушных тревог Украины",
+  "short_name": "Тревоги UA",
+  "description": "Онлайн-карта воздушных целей и тревог в Украине",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0b1a",
+  "theme_color": "#0b0b1a",
+  "lang": "uk",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

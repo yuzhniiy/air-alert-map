@@ -798,3 +798,12 @@ loadRegionsGeoJSON().then(() => {
 });
 
 if (settings.showHistory) historyLayer.addTo(map);
+// ============ PWA: SERVICE WORKER ============
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+            .then((reg) => console.log('✅ Service Worker зарегистрирован:', reg.scope))
+            .catch((err) => console.warn('⚠️ Service Worker не зарегистрирован:', err));
+    });
+}
+// ============================================
