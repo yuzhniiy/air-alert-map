@@ -22,6 +22,7 @@ const MAPS = {
     dark:      { name: 'Тёмная',     icon: '🌙', layer: L.tileLayer(`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, { attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 19 }) },
     light:     { name: 'Светлая',    icon: '☀️', layer: L.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, { attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 19 }) },
     satellite: { name: 'Спутник',    icon: '🛰', layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri', maxZoom: 19 }) },
+    satelliteDark: { name: 'Спутник ночь', icon: '🌑', layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri', maxZoom: 19, className: 'dark-satellite' }) },
     osm:       { name: 'Стандартная', icon: '🗺', layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 }) },
     terrain:   { name: 'Рельеф',     icon: '⛰', layer: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: '© OpenTopoMap (CC-BY-SA)', maxZoom: 17 }) }
 };
@@ -281,21 +282,71 @@ const CATEGORY_STYLE = {
     other:    { color: '#ff4444', glow: '#ff8888', emoji: '●' }
 };
 
+// ============ SVG-ИКОНКИ ДЛЯ ТИПОВ ЦЕЛЕЙ ============
+// Рисуем силуэты «носом вверх». При повороте поворачивается вся иконка.
+const SVG_ICONS = {
+    // Шахед-герань: треугольное крыло с толкающим винтом
+    shahed: `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 4 L23 16 L26 20 L36 22 L36 25 L26 24 L24 30 L28 34 L28 36 L20 33 L12 36 L12 34 L16 30 L14 24 L4 25 L4 22 L14 20 L17 16 Z"
+              fill="currentColor" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>`,
+    // Ракета: тонкое тело с треугольным носом и стабилизаторами
+    rocket: `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2 L23 12 L23 28 L27 34 L24 34 L24 36 L16 36 L16 34 L13 34 L17 28 L17 12 Z"
+              fill="currentColor" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+        <circle cx="20" cy="14" r="1.5" fill="#fff"/>
+    </svg>`,
+    // Разведывательный БпЛА: квадрокоптер
+    recon: `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <rect x="16" y="16" width="8" height="8" rx="2" fill="currentColor" stroke="#fff" stroke-width="1"/>
+        <line x1="16" y1="16" x2="6" y2="6" stroke="currentColor" stroke-width="2"/>
+        <line x1="24" y1="16" x2="34" y2="6" stroke="currentColor" stroke-width="2"/>
+        <line x1="16" y1="24" x2="6" y2="34" stroke="currentColor" stroke-width="2"/>
+        <line x1="24" y1="24" x2="34" y2="34" stroke="currentColor" stroke-width="2"/>
+        <circle cx="5" cy="5" r="3.5" fill="currentColor" stroke="#fff" stroke-width="0.8"/>
+        <circle cx="35" cy="5" r="3.5" fill="currentColor" stroke="#fff" stroke-width="0.8"/>
+        <circle cx="5" cy="35" r="3.5" fill="currentColor" stroke="#fff" stroke-width="0.8"/>
+        <circle cx="35" cy="35" r="3.5" fill="currentColor" stroke="#fff" stroke-width="0.8"/>
+    </svg>`,
+    // Тактическая авиация: самолёт с треугольным крылом
+    aircraft: `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 3 L22 14 L23 15 L36 20 L36 23 L23 21 L23 29 L28 33 L28 35 L20 33 L12 35 L12 33 L17 29 L17 21 L4 23 L4 20 L17 15 L18 14 Z"
+              fill="currentColor" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>`,
+    // Прочее: круг с точкой
+    other: `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="10" fill="currentColor" stroke="#fff" stroke-width="1.5"/>
+    </svg>`
+};
+// ============================================
+
 function getTargetStyle(target) { return CATEGORY_STYLE[getTargetCategory(target)]; }
 
 function createIcon(iconUrl, target) {
-    if (!iconUrl) {
-        const style = getTargetStyle(target || {});
+    const cat = getTargetCategory(target || {});
+    const style = CATEGORY_STYLE[cat];
+
+    // Если у aviacontrol есть своя SVG-картинка — используем её с подсветкой
+    if (iconUrl) {
         return L.divIcon({
             className: 'plane-icon',
-            html: `<div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:${style.color};border-radius:50%;border:2px solid #fff;box-shadow:0 0 12px ${style.glow},0 0 4px ${style.glow};font-size:16px;line-height:1;">${style.emoji}</div>`,
+            html: `<img src="${iconUrl}" style="width:32px;height:32px;filter: drop-shadow(0 0 6px ${style.glow});">`,
             iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16]
         });
     }
+
+    // Иначе — наша SVG-иконка
     return L.divIcon({
-        className: 'plane-icon',
-        html: `<img src="${iconUrl}" style="width:32px;height:32px;filter: drop-shadow(0 0 6px rgba(255,80,80,0.9));">`,
-        iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16]
+        className: 'plane-icon plane-svg',
+        html: `<div style="
+            width: 32px; height: 32px;
+            color: ${style.color};
+            filter: drop-shadow(0 0 6px ${style.glow}) drop-shadow(0 0 2px ${style.glow});
+            display: flex; align-items: center; justify-content: center;
+        ">${SVG_ICONS[cat] || SVG_ICONS.other}</div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16]
     });
 }
 // ============ КАРТОЧКА ЦЕЛИ В ПОПАПЕ ============
