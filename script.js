@@ -11,6 +11,42 @@ const settings = {
     soundEnabled: localStorage.getItem('soundEnabled') === 'true',
     showHistory: localStorage.getItem('showHistory') === 'true'
 };
+const tgFeedList = document.getElementById('tg-feed-list');
+const tgStatus = document.getElementById('tg-status');
+const MAX_TG_MSGS = 30;
+
+function addTgMessage(msg, isNew = false) {
+    if (!tgFeedList) return;
+    const empty = tgFeedList.querySelector('.tg-empty');
+    if (empty) empty.remove();
+
+    const div = document.createElement('div');
+    div.className = 'tg-msg' + (isNew ? ' new' : '');
+    div.innerHTML = `<span class="tg-time">${msg.time}</span>${msg.text}`;
+    tgFeedList.prepend(div);
+
+    while (tgFeedList.children.length > MAX_TG_MSGS) tgFeedList.lastChild.remove();
+}
+
+fetch('http://localhost:3000/api/telegram')
+    .then(r => r.json())
+    .then(d => {
+        if (d && d.messages && d.messages.length) {
+            d.messages.slice().reverse().forEach(m => addTgMessage(m));
+        } else if (tgFeedList) {
+            tgFeedList.innerHTML = '<div class="tg-empty">Сообщений пока нет</div>';
+        }
+    })
+    .catch(() => {
+        if (tgFeedList) tgFeedList.innerHTML = '<div class="tg-empty">Лента недоступна</div>';
+    });
+
+const tgSource = new EventSource('http://localhost:3000/api/telegram/stream');
+tgSource.onopen = () => { if (tgStatus) tgStatus.classList.add('online'); };
+tgSource.onmessage = (e) => {
+    try { addTgMessage(JSON.parse(e.data), true); } catch (err) {}
+};
+tgSource.onerror = () => { if (tgStatus) tgStatus.classList.remove('online'); };
 
 const filters = { shahed: true, rocket: true, aircraft: true, recon: true, other: true };
 // ============================================
