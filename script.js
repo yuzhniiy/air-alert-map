@@ -1,7 +1,7 @@
 ﻿const map = L.map('map').setView([48.3794, 31.1656], 6);
 // ============ АДРЕС БЭКЕНДА ============
 // Пока локально, потом заменим на адрес Render после деплоя
-const API_BASE = 'http://localhost:3000';
+const API_BASE = 'https://air-alert-map-api.onrender.com';
 // ============ СОСТОЯНИЕ НАСТРОЕК ============
 const settings = {
     mapTheme: localStorage.getItem('mapTheme') || 'dark',
