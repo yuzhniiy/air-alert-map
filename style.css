@@ -309,14 +309,8 @@
     transition: all 0.2s;
 }
 
-.settings-toggle.active .toggle-switch {
-    background: rgba(255, 68, 68, 0.4);
-}
-
-.settings-toggle.active .toggle-switch::after {
-    left: 18px;
-    background: #ff6666;
-}
+.settings-toggle.active .toggle-switch { background: rgba(255, 68, 68, 0.4); }
+.settings-toggle.active .toggle-switch::after { left: 18px; background: #ff6666; }
 
 /* ===== Боковая панель целей ===== */
 #side-panel {
@@ -393,11 +387,7 @@
 }
 
 .filter-item:hover { color: #fff; }
-
-.filter-item input[type="checkbox"] {
-    accent-color: #ff4444;
-    cursor: pointer;
-}
+.filter-item input[type="checkbox"] { accent-color: #ff4444; cursor: pointer; }
 
 .filter-item .dot {
     width: 8px;
@@ -405,73 +395,6 @@
     border-radius: 50%;
     display: inline-block;
     flex-shrink: 0;
-}
-
-/* ===== Лента Telegram ===== */
-#tg-feed {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    max-height: 220px;
-    display: flex;
-    flex-direction: column;
-}
-
-#tg-feed-header {
-    padding: 8px 14px;
-    font-size: 11px;
-    color: #ff6666;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: bold;
-}
-
-#tg-status {
-    color: #444;
-    font-size: 14px;
-    transition: color 0.3s;
-}
-
-#tg-status.online { color: #33dd66; }
-
-#tg-feed-list {
-    padding: 0;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.tg-msg {
-    padding: 6px 14px;
-    font-size: 11px;
-    color: #ccc;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    line-height: 1.4;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-}
-
-.tg-msg .tg-time {
-    color: #ff8888;
-    font-weight: bold;
-    margin-right: 6px;
-}
-
-.tg-msg.new {
-    animation: tgFlash 2.5s ease-out;
-}
-
-@keyframes tgFlash {
-    0% { background: rgba(255, 68, 68, 0.4); }
-    100% { background: transparent; }
-}
-
-.tg-empty {
-    padding: 16px 14px;
-    text-align: center;
-    color: #666;
-    font-size: 11px;
 }
 
 /* Список целей */
@@ -492,9 +415,7 @@
     transition: background 0.15s;
 }
 
-.target-item:hover {
-    background: rgba(255, 68, 68, 0.15);
-}
+.target-item:hover { background: rgba(255, 68, 68, 0.15); }
 
 .target-item-name {
     display: flex;
@@ -525,15 +446,16 @@
     color: #666;
     font-size: 12px;
 }
+
 /* ============ МОБИЛЬНАЯ АДАПТАЦИЯ ============ */
 @media (max-width: 768px) {
 
-    /* Поиск — на всю ширину, сверху */
+    /* Поиск — на всю ширину, сверху, под счётчиком */
     #search-panel {
         left: 10px;
         right: 10px;
         width: auto;
-        top: 60px;
+        top: 85px;
     }
 
     #search-input {
@@ -545,10 +467,20 @@
     #stats-panel {
         top: 8px;
         right: 8px;
+        left: 8px;
         padding: 8px 12px;
         font-size: 12px;
-        min-width: 130px;
-        max-width: 150px;
+        min-width: auto;
+        max-width: none;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+    }
+
+    #stats-panel .stat-row {
+        flex: 1;
+        gap: 8px;
     }
 
     #stats-panel .stat-value {
@@ -556,12 +488,69 @@
     }
 
     #target-breakdown {
+        margin-top: 0;
+        margin-left: 10px;
+        padding-top: 0;
+        padding-left: 10px;
+        border-top: none;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
         font-size: 10px;
-        max-height: 100px;
-        overflow-y: auto;
+        display: flex;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
     }
 
-    /* Боковая панель — уезжает за край, вызывается кнопкой */
+    #target-breakdown .breakdown-item {
+        white-space: nowrap;
+        margin: 0;
+        gap: 4px;
+    }
+
+    #target-breakdown .breakdown-item span:first-child {
+        display: none;
+    }
+
+    /* Зум-кнопки — в левый верхний угол */
+    .leaflet-control-zoom {
+        margin-top: 60px !important;
+        margin-left: 10px !important;
+    }
+
+    .leaflet-control-zoom a {
+        width: 36px !important;
+        height: 36px !important;
+        line-height: 36px !important;
+        font-size: 20px !important;
+    }
+
+    /* Кнопка настроек — правый нижний угол, ВЫШЕ панели целей */
+    .settings-panel {
+        position: fixed !important;
+        top: auto !important;
+        bottom: 60px !important;
+        right: 10px !important;
+        left: auto !important;
+        z-index: 1200;
+    }
+
+    .settings-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 22px;
+    }
+
+    /* Меню настроек — открывается вверх, влево от кнопки */
+    .settings-menu {
+        bottom: 52px !important;
+        top: auto !important;
+        right: 0 !important;
+        left: auto !important;
+        max-height: 60vh;
+        min-width: 240px;
+    }
+
+    /* Боковая панель — уезжает вниз, вызывается тапом */
     #side-panel {
         position: fixed;
         top: auto;
@@ -590,7 +579,6 @@
         color: #ff6666;
     }
 
-    /* Контент панели — компактнее */
     #side-body {
         max-height: calc(60vh - 44px);
     }
@@ -600,61 +588,30 @@
         gap: 4px;
     }
 
-    .filter-item {
-        font-size: 11px;
-    }
-
-    .target-item {
-        padding: 6px 12px;
-    }
-
-    .target-item-name {
-        font-size: 11px;
-    }
-
-    .target-item-speed {
-        font-size: 10px;
-    }
-
-    /* Зум-кнопки — меньше и в правом нижнем */
-    .leaflet-control-zoom a {
-        width: 32px !important;
-        height: 32px !important;
-        line-height: 32px !important;
-        font-size: 18px !important;
-    }
-
-    /* Кнопка настроек — чуть левее, чтобы не мешать зум-кнопкам */
-    .settings-btn {
-        width: 36px;
-        height: 36px;
-        font-size: 18px;
-    }
-
-    /* Список целей — на всю ширину */
-    #targets-list {
-        max-height: 200px;
-    }
-
-    /* Скрываем длинные подписи на карте */
-    .leaflet-control-attribution {
-        font-size: 9px;
-    }
+    .filter-item { font-size: 11px; }
+    .target-item { padding: 6px 12px; }
+    .target-item-name { font-size: 11px; }
+    .target-item-speed { font-size: 10px; }
+    #targets-list { max-height: 200px; }
+    .leaflet-control-attribution { font-size: 9px; }
 }
 
 /* Очень маленькие экраны */
 @media (max-width: 400px) {
-    #search-panel {
-        top: 50px;
-    }
-
     #stats-panel {
         font-size: 11px;
         padding: 6px 10px;
-        min-width: 110px;
     }
 
-    #stats-panel .stat-value {
-        font-size: 16px;
+    #stats-panel .stat-value { font-size: 16px; }
+
+    .settings-panel {
+        bottom: 58px !important;
+    }
+
+    .settings-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
     }
 }
