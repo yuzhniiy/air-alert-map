@@ -2,7 +2,5 @@ node_modules/
 login-log.txt
 *.log
 .DS_Store
-telegram.js
-telegram-login.js
 .env
 login-log.txt
