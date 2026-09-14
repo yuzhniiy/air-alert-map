@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта воздушных тревог</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="map"></div>
+
+    <div id="search-panel">
+        <div id="search-input-wrap">
+            <input type="text" id="search-input" placeholder="Поиск города или села..." autocomplete="off" />
+            <button id="search-clear" title="Убрать метку">×</button>
+        </div>
+        <div id="search-results"></div>
+    </div>
+
+    <div id="stats-panel">
+        <div class="stat-row">
+            <span class="stat-label">Целей в воздухе:</span>
+            <span id="target-count" class="stat-value">0</span>
+        </div>
+        <div id="target-breakdown"></div>
+    </div>
+
+    <div id="side-panel">
+        <div id="side-header">
+            <span>Цели на карте</span>
+            <button id="side-collapse" title="Свернуть/развернуть">–</button>
+        </div>
+        <div id="side-body">
+            <div id="filters">
+                <label class="filter-item"><input type="checkbox" data-cat="shahed" checked><span class="dot" style="background:#ff8800"></span><span>Шахеды</span></label>
+                <label class="filter-item"><input type="checkbox" data-cat="rocket" checked><span class="dot" style="background:#ffcc00"></span><span>Ракеты / реакт. БпЛА</span></label>
+                <label class="filter-item"><input type="checkbox" data-cat="aircraft" checked><span class="dot" style="background:#ff2222"></span><span>Авиация</span></label>
+                <label class="filter-item"><input type="checkbox" data-cat="recon" checked><span class="dot" style="background:#00ccff"></span><span>Разведка</span></label>
+                <label class="filter-item"><input type="checkbox" data-cat="other" checked><span class="dot" style="background:#ff4444"></span><span>Прочее</span></label>
+            </div>
+
+            <!-- ЛЕНТА TELEGRAM -->
+            <div id="tg-feed">
+                <div id="tg-feed-header">
+                    <span>📡 @eRadarrua</span>
+                    <span id="tg-status" title="Статус">●</span>
+                </div>
+                <div id="tg-feed-list"></div>
+            </div>
+
+            <div id="targets-list"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
