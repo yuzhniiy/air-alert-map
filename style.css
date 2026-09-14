@@ -525,3 +525,136 @@
     color: #666;
     font-size: 12px;
 }
+/* ============ МОБИЛЬНАЯ АДАПТАЦИЯ ============ */
+@media (max-width: 768px) {
+
+    /* Поиск — на всю ширину, сверху */
+    #search-panel {
+        left: 10px;
+        right: 10px;
+        width: auto;
+        top: 60px;
+    }
+
+    #search-input {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+
+    /* Счётчик — компактный, в правом верхнем */
+    #stats-panel {
+        top: 8px;
+        right: 8px;
+        padding: 8px 12px;
+        font-size: 12px;
+        min-width: 130px;
+        max-width: 150px;
+    }
+
+    #stats-panel .stat-value {
+        font-size: 18px;
+    }
+
+    #target-breakdown {
+        font-size: 10px;
+        max-height: 100px;
+        overflow-y: auto;
+    }
+
+    /* Боковая панель — уезжает за край, вызывается кнопкой */
+    #side-panel {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 60vh;
+        border-radius: 14px 14px 0 0;
+        transform: translateY(calc(100% - 44px));
+        transition: transform 0.25s ease;
+        z-index: 1100;
+    }
+
+    #side-panel.open {
+        transform: translateY(0);
+    }
+
+    #side-header {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+
+    #side-header span::before {
+        content: '☰  ';
+        color: #ff6666;
+    }
+
+    /* Контент панели — компактнее */
+    #side-body {
+        max-height: calc(60vh - 44px);
+    }
+
+    #filters {
+        padding: 6px 12px;
+        gap: 4px;
+    }
+
+    .filter-item {
+        font-size: 11px;
+    }
+
+    .target-item {
+        padding: 6px 12px;
+    }
+
+    .target-item-name {
+        font-size: 11px;
+    }
+
+    .target-item-speed {
+        font-size: 10px;
+    }
+
+    /* Зум-кнопки — меньше и в правом нижнем */
+    .leaflet-control-zoom a {
+        width: 32px !important;
+        height: 32px !important;
+        line-height: 32px !important;
+        font-size: 18px !important;
+    }
+
+    /* Кнопка настроек — чуть левее, чтобы не мешать зум-кнопкам */
+    .settings-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+
+    /* Список целей — на всю ширину */
+    #targets-list {
+        max-height: 200px;
+    }
+
+    /* Скрываем длинные подписи на карте */
+    .leaflet-control-attribution {
+        font-size: 9px;
+    }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 400px) {
+    #search-panel {
+        top: 50px;
+    }
+
+    #stats-panel {
+        font-size: 11px;
+        padding: 6px 10px;
+        min-width: 110px;
+    }
+
+    #stats-panel .stat-value {
+        font-size: 16px;
+    }
+}

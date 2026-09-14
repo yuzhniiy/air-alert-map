@@ -511,6 +511,21 @@ if (sideCollapse && sidePanel) {
         sideCollapse.textContent = sidePanel.classList.contains('collapsed') ? '+' : '–';
     });
 }
+// На мобильных — тап по шапке панели выдвигает её
+const sideHeader = document.getElementById('side-header');
+if (sideHeader && sidePanel) {
+    sideHeader.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768) {
+            e.stopPropagation();
+            sidePanel.classList.toggle('open');
+        }
+    });
+}
+
+// При старте на мобильном — панель закрыта
+if (window.innerWidth <= 768 && sidePanel) {
+    sidePanel.classList.remove('open');
+}
 // ============================================
 
 // ============ ЗАГРУЗКА ЦЕЛЕЙ ============
