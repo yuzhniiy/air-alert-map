@@ -7,6 +7,7 @@ const settings = {
     mapTheme: localStorage.getItem('mapTheme') || 'dark',
     showRoutes: localStorage.getItem('showRoutes') !== 'false',
     showPrediction: localStorage.getItem('showPrediction') !== 'false',
+    showTail: localStorage.getItem('showTail') !== 'false',
     soundEnabled: localStorage.getItem('soundEnabled') === 'true',
     showHistory: localStorage.getItem('showHistory') === 'true'
 };
@@ -66,11 +67,12 @@ const SettingsControl = L.Control.extend({
         titleDisplay.textContent = 'Отображение';
 
         const toggles = [
-            { key: 'showRoutes',     label: '🛣 Маршруты целей' },
-            { key: 'showPrediction', label: '🔮 Прогноз траектории' },
-            { key: 'soundEnabled',   label: '🔊 Звук уведомлений' },
-            { key: 'showHistory',    label: '📊 История за 24ч' }
-        ];
+    { key: 'showRoutes',     label: '🛣 Маршруты целей' },
+    { key: 'showPrediction', label: '🔮 Прогноз траектории' },
+    { key: 'showTail',       label: '👣 Хвост за целью' },
+    { key: 'soundEnabled',   label: '🔊 Звук уведомлений' },
+    { key: 'showHistory',    label: '📊 История за 24ч' }
+];
 
         toggles.forEach(t => {
             const row = L.DomUtil.create('div', 'settings-toggle', menu);
@@ -103,6 +105,16 @@ const SettingsControl = L.Control.extend({
                         }
                     });
                 }
+                if (t.key === 'showTail') {
+    Object.values(activeMarkers).forEach(m => {
+        if (!m.tailLine) return;
+        if (settings.showTail) {
+            if (filters[m.category] && !map.hasLayer(m.tailLine)) m.tailLine.addTo(map);
+        } else {
+            if (map.hasLayer(m.tailLine)) map.removeLayer(m.tailLine);
+        }
+    });
+}
                 if (t.key === 'showHistory') {
                     if (settings.showHistory) {
                         historyLayer.addTo(map);
@@ -286,6 +298,39 @@ function createIcon(iconUrl, target) {
         iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16]
     });
 }
+// ============ КАРТОЧКА ЦЕЛИ В ПОПАПЕ ============
+function buildPopupHtml(target, actualBearing) {
+    const style = getTargetStyle(target);
+    const speed = target.speed_kmh || 0;
+    const speedPct = Math.min(100, (speed / 900) * 100); // шкала до 900 км/ч
+    const arrows = ['↑','↗','→','↘','↓','↙','←','↖'];
+    const arrow = arrows[Math.round(((actualBearing || 0) % 360) / 45) % 8];
+
+    return `
+        <div class="target-popup">
+            <div class="tp-header">
+                <span class="tp-emoji" style="background:${style.color}">${style.emoji}</span>
+                <span class="tp-label">${target.label || 'Цель'}</span>
+            </div>
+            <div class="tp-row">
+                <span class="tp-key">Скорость</span>
+                <span class="tp-val">${speed || '?'} км/ч</span>
+            </div>
+            <div class="tp-bar">
+                <div class="tp-bar-fill" style="width:${speedPct}%;background:${style.color}"></div>
+            </div>
+            <div class="tp-row">
+                <span class="tp-key">Курс</span>
+                <span class="tp-val">${arrow} ${Math.round(actualBearing || 0)}°</span>
+            </div>
+            <div class="tp-row">
+                <span class="tp-key">Тип</span>
+                <span class="tp-val">${target.type || '—'}</span>
+            </div>
+        </div>
+    `;
+}
+// ============================================
 // ============================================
 
 // ============ ЗВУК ============
@@ -561,33 +606,30 @@ async function loadTargets() {
                 const cur = m.marker.getLatLng();
                 m.fromLat = cur.lat; m.fromLon = cur.lng;
                 m.toLat = lat; m.toLon = lon;
-                // === ANTI-JUMP: проверяем, не прыгнула ли цель слишком далеко ===
-const curReal = m.trackHistory && m.trackHistory.length
-    ? m.trackHistory[m.trackHistory.length - 1]
-    : { lat: cur.lat, lon: cur.lng, ts: now - 5000 };
-const jumpDist = distanceKm(curReal.lat, curReal.lon, lat, lon);
-const dtSecJump = (now - curReal.ts) / 1000;
-const maxPossible = ((target.speed_kmh || 500) / 3600) * dtSecJump * 3; // запас ×3
 
-if (jumpDist > maxPossible && jumpDist > 5) {
-    // Прыжок невозможен — игнорируем это обновление
-    console.warn(`⚠️ Anti-jump: цель ${id} прыгнула ${jumpDist.toFixed(1)} км за ${dtSecJump.toFixed(1)} сек — пропущено`);
-    return; // пропускаем итерацию для этой цели
-}
+                // ANTI-JUMP
+                const curReal = m.trackHistory && m.trackHistory.length
+                    ? m.trackHistory[m.trackHistory.length - 1]
+                    : { lat: cur.lat, lon: cur.lng, ts: now - 5000 };
+                const jumpDist = distanceKm(curReal.lat, curReal.lon, lat, lon);
+                const dtSecJump = (now - curReal.ts) / 1000;
+                const maxPossible = ((target.speed_kmh || 500) / 3600) * dtSecJump * 3;
+                if (jumpDist > maxPossible && jumpDist > 5) {
+                    console.warn(`⚠️ Anti-jump: цель ${id} прыгнула ${jumpDist.toFixed(1)} км`);
+                    return;
+                }
 
-                // === ИСТОРИЯ ПОЗИЦИЙ И ФАКТИЧЕСКОЕ НАПРАВЛЕНИЕ ===
+                // История
                 if (!m.trackHistory) m.trackHistory = [];
                 m.trackHistory.push({ lat, lon, ts: now });
-                if (m.trackHistory.length > 5) m.trackHistory.shift();
+                if (m.trackHistory.length > 30) m.trackHistory.shift(); // 30 точек ≈ 2.5 мин
 
                 let actualBearing = apiBearing;
                 if (m.trackHistory.length >= 2) {
                     const p1 = m.trackHistory[m.trackHistory.length - 2];
                     const p2 = m.trackHistory[m.trackHistory.length - 1];
                     const d = distanceKm(p1.lat, p1.lon, p2.lat, p2.lon);
-                    if (d > 0.1) { // сдвинулся хотя бы на 100 м
-                        actualBearing = bearingBetween(p1.lat, p1.lon, p2.lat, p2.lon);
-                    }
+                    if (d > 0.1) actualBearing = bearingBetween(p1.lat, p1.lon, p2.lat, p2.lon);
                 }
 
                 m.fromBearing = m.currentBearing ?? m.toBearing;
@@ -595,19 +637,33 @@ if (jumpDist > maxPossible && jumpDist > 5) {
                 m.lastUpdate = now;
                 m.category = cat;
 
-                m.marker.setPopupContent(`
-                    <b>${target.label || 'Цель'}</b><br>
-                    Тип: ${target.type}<br>
-                    Скорость: ${target.speed_kmh || '?'} км/ч<br>
-                    Курс: ${Math.round(actualBearing)}°
-                `);
+                // Карточка в попапе
+                m.marker.setPopupContent(buildPopupHtml(target, actualBearing));
 
-                // Обновляем маршрут (откуда летит)
+                // Обновляем маршрут (от aviacontrol)
                 if (m.routeLine && target.route && target.route.length > 1) {
                     m.routeLine.setLatLngs(target.route);
                 }
 
-                // Обновляем прогноз на основе фактической траектории
+                // === ХВОСТ ЗА ЦЕЛЬЮ ===
+                if (m.trackHistory.length > 2) {
+                    const tailPoints = m.trackHistory.map(p => [p.lat, p.lon]);
+                    if (m.tailLine) {
+                        m.tailLine.setLatLngs(tailPoints);
+                        m.tailLine.setStyle({ color: getTargetStyle(target).color });
+                    } else {
+                        m.tailLine = L.polyline(tailPoints, {
+                            color: getTargetStyle(target).color,
+                            weight: 2,
+                            opacity: 0.35,
+                            interactive: false,
+                            className: 'tail-line'
+                        });
+                        if (visible && settings.showTail) m.tailLine.addTo(map);
+                    }
+                }
+
+                // Прогноз
                 const predictedPoints = predictPath(lat, lon, m.trackHistory, cat);
                 if (m.predictedLine) {
                     if (predictedPoints.length > 1) {
@@ -630,16 +686,11 @@ if (jumpDist > maxPossible && jumpDist > 5) {
                     icon: createIcon(iconUrl, target),
                     rotationAngle: apiBearing - 45,
                     rotationOrigin: 'center center'
-                }).bindPopup(`
-                    <b>${target.label || 'Цель'}</b><br>
-                    Тип: ${target.type}<br>
-                    Скорость: ${target.speed_kmh || '?'} км/ч<br>
-                    Курс: ${apiBearing}°
-                `);
+                }).bindPopup(buildPopupHtml(target, apiBearing));
 
                 if (visible) marker.addTo(targetsLayer);
 
-                // Маршрут (откуда летит)
+                // Маршрут
                 let routeLine = null;
                 if (target.route && target.route.length > 1) {
                     routeLine = L.polyline(target.route, {
@@ -649,9 +700,8 @@ if (jumpDist > maxPossible && jumpDist > 5) {
                     if (visible && settings.showRoutes) routeLine.addTo(map);
                 }
 
-                // Прогноз появится только после накопления истории (2-3 обновления)
                 activeMarkers[id] = {
-                    marker, routeLine, predictedLine: null, category: cat,
+                    marker, routeLine, predictedLine: null, tailLine: null, category: cat,
                     trackHistory: [{ lat, lon, ts: now }],
                     fromLat: lat, fromLon: lon, toLat: lat, toLon: lon,
                     fromBearing: apiBearing, toBearing: apiBearing,
@@ -660,31 +710,28 @@ if (jumpDist > maxPossible && jumpDist > 5) {
             }
         });
 
-        // «Липкие» маркеры: если цель исчезла — держим её ещё 15 секунд
-Object.keys(activeMarkers).forEach(id => {
-    const m = activeMarkers[id];
-    if (!seenIds.has(id)) {
-        // Отмечаем время первого пропадания
-        if (!m.missingSince) m.missingSince = Date.now();
+        // Удаление пропавших целей
+        Object.keys(activeMarkers).forEach(id => {
+            const m = activeMarkers[id];
+            if (!seenIds.has(id)) {
+                if (!m.missingSince) m.missingSince = Date.now();
+                const missingSec = (Date.now() - m.missingSince) / 1000;
+                if (missingSec > 15) {
+                    targetsLayer.removeLayer(m.marker);
+                    if (m.routeLine && map.hasLayer(m.routeLine)) map.removeLayer(m.routeLine);
+                    if (m.predictedLine && map.hasLayer(m.predictedLine)) map.removeLayer(m.predictedLine);
+                    if (m.tailLine && map.hasLayer(m.tailLine)) map.removeLayer(m.tailLine);
+                    delete activeMarkers[id];
+                }
+            } else {
+                m.missingSince = null;
+            }
+        });
 
-        const missingSec = (Date.now() - m.missingSince) / 1000;
-        if (missingSec > 15) {
-            // Прошло 15 секунд — теперь удаляем
-            targetsLayer.removeLayer(m.marker);
-            if (m.routeLine && map.hasLayer(m.routeLine)) map.removeLayer(m.routeLine);
-            if (m.predictedLine && map.hasLayer(m.predictedLine)) map.removeLayer(m.predictedLine);
-            delete activeMarkers[id];
-        }
-        // Иначе — оставляем на карте, цель ещё может вернуться
-    } else {
-        // Цель вернулась — сбрасываем счётчик пропадания
-        m.missingSince = null;
-    }
-});
         if (!isFirstLoad && newTargetsCount > 0) playNotificationSound();
         loadTargets._didFirstLoad = true;
 
-        if (settings.showHistory) renderHistory();
+               if (settings.showHistory) renderHistory();
     } catch (error) {
         console.error("Ошибка целей:", error);
     }
