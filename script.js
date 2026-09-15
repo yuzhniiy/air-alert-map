@@ -694,7 +694,11 @@ async function loadTargets() {
                 m.fromLat = cur.lat; m.fromLon = cur.lng;
                 m.toLat = lat; m.toLon = lon;
 
-                //
+                // ANTI-JUMP отключён — чтобы не терять цели при пике
+// if (jumpDist > maxPossible && jumpDist > 5) {
+//     console.warn(`⚠️ Anti-jump: цель ${id} прыгнула ${jumpDist.toFixed(1)} км — пропущено`);
+//     return;
+// }
 
                 // История
                 if (!m.trackHistory) m.trackHistory = [];
@@ -914,7 +918,7 @@ function goToLocation(lat, lon, name) {
 // ============ ЗАПУСК ============
 animationLoop();
 loadTargets();
-setInterval(loadTargets, 5000);
+setInterval(loadTargets, 3000);
 
 loadRegionsGeoJSON().then(() => {
     setTimeout(updateAlertsLayer, 2000);

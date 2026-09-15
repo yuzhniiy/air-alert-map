@@ -58,7 +58,7 @@ async function refreshAlertsCache() {
 
 refreshTargetsCache();
 refreshAlertsCache();
-setInterval(refreshTargetsCache, 5000);
+setInterval(refreshTargetsCache, 3000);
 setInterval(refreshAlertsCache, 25000);
 
 // ============ ЭНДПОИНТЫ ============
