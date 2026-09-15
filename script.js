@@ -694,17 +694,7 @@ async function loadTargets() {
                 m.fromLat = cur.lat; m.fromLon = cur.lng;
                 m.toLat = lat; m.toLon = lon;
 
-                // ANTI-JUMP
-                const curReal = m.trackHistory && m.trackHistory.length
-                    ? m.trackHistory[m.trackHistory.length - 1]
-                    : { lat: cur.lat, lon: cur.lng, ts: now - 5000 };
-                const jumpDist = distanceKm(curReal.lat, curReal.lon, lat, lon);
-                const dtSecJump = (now - curReal.ts) / 1000;
-                const maxPossible = ((target.speed_kmh || 500) / 3600) * dtSecJump * 3;
-                if (jumpDist > maxPossible && jumpDist > 5) {
-                    console.warn(`⚠️ Anti-jump: цель ${id} прыгнула ${jumpDist.toFixed(1)} км`);
-                    return;
-                }
+                //
 
                 // История
                 if (!m.trackHistory) m.trackHistory = [];
